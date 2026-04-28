@@ -1,0 +1,14 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# Env variables
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
