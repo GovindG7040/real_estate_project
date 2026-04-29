@@ -1,122 +1,112 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+// 1. Import the CSS Module as 'styles'
+import styles from './App.module.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [sqft, setSqft] = useState("");
+  const [bhk, setBhk] = useState(0);
+  const [bath, setBath] = useState(0);
+  const [location, setLocation] = useState("");
+  const [locations, setLocations] = useState([]);
+  const [price, setPrice] = useState(null);
 
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/get_location_names');
+        setLocations(response.data.locations);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+    fetchLocations();
+  }, []);
+
+  const handlePredict = async (e) => {
+    e.preventDefault(); 
+    if (!location) {
+      alert("Please select a location first!");
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/predict_home_price', {
+        total_sqft: parseFloat(sqft),
+        location: location,
+        bhk: parseInt(bhk),
+        bath: parseInt(bath)
+      });
+      setPrice(response.data.estimated_price);
+    } catch (error) {
+      console.error("Error predicting price:", error);
+    }
+  };
+
+  // 2. Apply styles using className={styles.className}
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className={styles.pageContainer}>
+      <div className={styles.glassCard}>
+        <h2 className={styles.title}>Bangalore Real Estate Predictor</h2>
 
-      <div className="ticks"></div>
+        <form onSubmit={handlePredict}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Area (Sqft)</label>
+            <input 
+              type="number" 
+              className={styles.inputField}
+              value={sqft} 
+              onChange={(e) => setSqft(e.target.value)} 
+            />
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>BHK</label>
+            <input 
+              type="number" 
+              className={styles.inputField}
+              value={bhk} 
+              onChange={(e) => setBhk(e.target.value)} 
+            />
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Bathrooms</label>
+            <input 
+              type="number" 
+              className={styles.inputField}
+              value={bath} 
+              onChange={(e) => setBath(e.target.value)} 
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Location</label>
+            <select 
+              className={styles.inputField}
+              value={location} 
+              onChange={(e) => setLocation(e.target.value)}
+            >
+              <option value="" disabled>Choose a location</option>
+              {locations.map((loc, index) => (
+                <option key={index} value={loc}>{loc}</option>
+              ))}
+            </select>
+          </div>
+
+          <button type="submit" className={styles.submitBtn}>
+            Estimate Price
+          </button>
+        </form>
+
+        {price !== null && (
+          <div className={styles.resultBox}>
+            <h3 className={styles.resultText}>₹ {price} Lakhs</h3>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
